@@ -1,0 +1,116 @@
+// =========================================================================
+// WORKER - Silsilah Keluarga (Cloudflare Workers + D1)
+// Foto tetap disimpan di Google Drive; URL lh3 disimpan di kolom fotos/foto.
+// =========================================================================
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Key',
+};
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS },
+  });
+}
+
+async function kirimTelegram(env, info) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return;
+  const pesan =
+    '📢 *USULAN KOREKSI SILSILAH KELUARGA*\n\n' +
+    'Waktu: ' + (info.timestamp || '-') + '\n' +
+    '👤 *Nama Anggota:* ' + (info.nama || '-') + '\n' +
+    '🛠 *Bagian Keliru:* ' + (info.bagian || '-') + '\n' +
+    '❌ *Data Lama:* ' + (info.data_lama || '-') + '\n' +
+    '✅ *Usulan Baru:* ' + (info.data_baru || '-') + '\n' +
+    '📝 *Keterangan:* ' + (info.keterangan || '-');
+  try {
+    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: env.TELEGRAM_CHAT_ID,
+        text: pesan,
+        parse_mode: 'Markdown',
+      }),
+    });
+  } catch (e) { console.error('Telegram gagal:', e); }
+}
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+
+    // ---------- API ----------
+    if (url.pathname === '/api/health') {
+      return json({ status: 'ok', time: new Date().toISOString() });
+    }
+
+    if (url.pathname === '/api/data' && request.method === 'GET') {
+      try {
+        const { results: members } = await env.DB.prepare(
+          'SELECT id,nama,keluarga_id,ayah_id,ibu_id,pasangan_id,urutan_anak,tanggal_lahir,gender,no_telepon,catatan,fotos FROM members'
+        ).all();
+        const { results: cabang } = await env.DB.prepare(
+          'SELECT keluarga_id,nama_keluarga,alamat,catatan,foto,map FROM cabang'
+        ).all();
+        for (const m of members) {
+          try { m.fotos = JSON.parse(m.fotos || '[]'); } catch { m.fotos = []; }
+          // Frontend lama membaca key 'no telepon' / 'tanggal lahir' / 'urutan anak'
+          m['no telepon'] = m.no_telepon;
+          m['tanggal lahir'] = m.tanggal_lahir;
+          m['urutan anak'] = m.urutan_anak;
+        }
+        return json({ status: 'success', members, cabang });
+      } catch (e) {
+        return json({ status: 'error', message: String(e) }, 500);
+      }
+    }
+
+    if (url.pathname === '/api/koreksi' && request.method === 'POST') {
+      try {
+        const d = await request.json();
+        if (!d.bagian || !d.data_baru) {
+          return json({ status: 'error', message: 'bagian dan data_baru wajib diisi' }, 400);
+        }
+        const now = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).replace('T', ' ');
+        const idAnggota = d.id || d.anggota_id || '-';
+        const nama = d.nama || '-';
+        const bagian = d.bagian || '-';
+        const dataLama = d.data_lama || '-';
+        const dataBaru = d.data_baru || '-';
+        const keterangan = d.keterangan || '-';
+
+        await env.DB.prepare(
+          `INSERT INTO koreksi (timestamp, anggota_id, nama, bagian, data_lama, data_baru, keterangan, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')`
+        ).bind(now, idAnggota, nama, bagian, dataLama, dataBaru, keterangan).run();
+
+        await kirimTelegram(env, {
+          timestamp: now, nama, bagian, data_lama: dataLama, data_baru: dataBaru, keterangan,
+        });
+
+        return json({ status: 'success', message: 'Koreksi berhasil dikirim dan dicatat.' });
+      } catch (e) {
+        return json({ status: 'error', message: String(e) }, 500);
+      }
+    }
+
+    // Daftar koreksi (admin) - butuh header X-Admin-Key
+    if (url.pathname === '/api/koreksi' && request.method === 'GET') {
+      if (request.headers.get('X-Admin-Key') !== env.ADMIN_KEY) {
+        return json({ status: 'error', message: 'Unauthorized' }, 401);
+      }
+      const { results } = await env.DB.prepare(
+        'SELECT * FROM koreksi ORDER BY id DESC LIMIT 500'
+      ).all();
+      return json({ status: 'success', koreksi: results });
+    }
+
+    return json({ status: 'error', message: 'Not found' }, 404);
+  },
+};
