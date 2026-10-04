@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silsilah Keluarga</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans & Oswald (tema FIFA World Cup) -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Noto Sans', 'sans-serif'],
+            serif: ['Oswald', 'sans-serif'],
+          },
+          colors: {
+            appBg: '#043330',
+            textWhite: '#F0FDFA',
+            textMuted: '#7FC9BC',
+            woodGold: '#22D3EE',
+          }
+        }
+      }
+    }
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 0%, #114E45 0%, #043330 60%, #021F1C 100%) !important;
+      background-attachment: fixed !important;
+      color: #F0FDFA;
+      font-family: 'Noto Sans', sans-serif;
+    }
+    
+    /* CARD UTAMA */
+    .glossy-card {
+      background: linear-gradient(180deg, #0F6659 0%, #0D453C 100%) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    }
+    .glossy-card:hover {
+      border-color: rgba(212, 175, 55, 0.2);
+      box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+    }
+    
+    /* CARD CABANG KELUARGA & ORNAMEN NATURAL STEP 10 */
+    .glossy-card-cabang {
+      background: linear-gradient(180deg, #0F6659 0%, #0D453C 100%) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Sentuhan watermark pohon/daun yang natural dan lembut di sudut card cabang */
+    .glossy-card-cabang::after {
+      content: "";
+      position: absolute;
+      right: -15px;
+      bottom: -25px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, rgba(30, 140, 121, 0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .glossy-card-cabang .fa-tree {
+      opacity: 0.07;
+      color: #22D3EE;
+      transform: scale(1.1);
+    }
+    
+    /* INNER CARD */
+    .inner-card {
+      background: linear-gradient(180deg, rgba(24, 116, 101, 0.7) 0%, rgba(9, 50, 43, 0.85) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+    }
+    
+    /* TOMBOL "LIHAT" PADA CARD DAFTAR ANGGOTA */
+    .glossy-card .inner-card {
+      background: linear-gradient(180deg, rgba(28, 132, 114, 0.85) 0%, rgba(19, 94, 81, 0.95) 100%);
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      color: #22D3EE;
+    }
+    .glossy-card .inner-card:hover {
+      background: linear-gradient(180deg, rgba(36, 158, 137, 0.9) 0%, rgba(23, 110, 95, 1) 100%);
+      border-color: rgba(212, 175, 55, 0.3);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    /* ICON ORANG PADA CARD DAFTAR ANGGOTA */
+    .glossy-card div[class*="rounded-xl"][class*="inner-card"][class*="text-woodGold"] {
+      background: linear-gradient(180deg, #092E27 0%, #021F1C 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.12) !important;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+      color: #22D3EE !important;
+    }
+
+    /* TOMBOL "KEMBALI" */
+    .back-nav-btn {
+      background: linear-gradient(180deg, rgba(27, 128, 111, 0.75) 0%, rgba(16, 82, 71, 0.9) 100%);
+      border: 1px solid rgba(212, 175, 55, 0.18);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      color: #EFFDFB;
+    }
+    .back-nav-btn:hover {
+      background: linear-gradient(180deg, rgba(30, 140, 121, 0.85) 0%, rgba(20, 98, 85, 1) 100%);
+      border-color: rgba(212, 175, 55, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    .back-nav-btn:active {
+      background: linear-gradient(180deg, rgba(14, 72, 62, 0.95) 0%, rgba(10, 54, 47, 1) 100%);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(0, 0, 0, 0.15);
+    }
+    .back-nav-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .back-nav-btn i {
+      color: #22D3EE;
+    }
+
+    /* POHON KELUARGA */
+    .tree-fullscreen {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 70;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 0%, #114E45 0%, #043330 58%, #021F1C 100%);
+      isolation: isolate;
+    }
+    .tree-toolbar {
+      position: relative;
+      z-index: 30;
+      flex: 0 0 auto;
+      min-height: 58px;
+      padding: calc(7px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) 7px calc(10px + env(safe-area-inset-left, 0px));
+      background: rgba(11, 60, 52, 0.96);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.24);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .tree-toolbar-grid {
+      display: grid;
+      grid-template-columns: minmax(44px, 1fr) minmax(0, 3fr) minmax(44px, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+    .tree-toolbar-button {
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      color: #22D3EE;
+      background: linear-gradient(180deg, rgba(27, 128, 111, 0.9), rgba(13, 68, 59, 0.96));
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    }
+    .tree-toolbar-button:active { transform: scale(.95); }
+    .tree-toolbar-title { min-width: 0; text-align: center; }
+    .tree-toolbar-title h2 {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tree-toolbar-title p {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tree-canvas-shell {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .tree-viewport {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
+      background:
+        radial-gradient(circle at center, rgba(30, 140, 121, 0.28), transparent 62%),
+        linear-gradient(rgba(212, 175, 55, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212, 175, 55, 0.035) 1px, transparent 1px),
+        #04332F;
+      background-size: auto, 28px 28px, 28px 28px, auto;
+    }
+    .tree-stage {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+    .tree-node {
+      position: absolute;
+      width: 156px;
+      min-height: 76px;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+    .tree-node-center {
+      border-color: rgba(243, 229, 171, 0.9) !important;
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2), 0 8px 22px rgba(0, 0, 0, 0.36) !important;
+    }
+    .tree-line-parent { stroke: #22D3EE; stroke-width: 2; fill: none; opacity: .72; }
+    .tree-line-spouse { stroke: #A5F3FC; stroke-width: 2.5; fill: none; opacity: .9; stroke-dasharray: 7 4; }
+    .tree-control-grid select, .tree-control-grid input { min-height: 42px; }
+    .tree-settings-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: calc(68px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px));
+      background: rgba(3, 26, 22, 0.28);
+    }
+    .tree-settings-panel {
+      width: min(380px, 100%);
+      max-height: calc(100dvh - 92px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      background: linear-gradient(180deg, #0F6659 0%, #072721 100%);
+      border: 1px solid rgba(212, 175, 55, 0.34);
+      border-radius: 18px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.48);
+    }
+    .tree-floating-controls {
+      position: absolute;
+      right: calc(14px + env(safe-area-inset-right, 0px));
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      z-index: 25;
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 14px;
+      background: rgba(8, 46, 40, 0.86);
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .tree-floating-controls button { min-width: 44px; height: 44px; }
+    @media (max-width: 639px) {
+      .tree-settings-layer {
+        align-items: flex-end;
+        padding: calc(62px + env(safe-area-inset-top, 0px)) 0 0;
+        background: rgba(3, 26, 22, 0.5);
+      }
+      .tree-settings-panel {
+        width: 100%;
+        max-height: min(76dvh, 620px);
+        border-radius: 22px 22px 0 0;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .tree-floating-controls {
+        right: calc(10px + env(safe-area-inset-right, 0px));
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+  </style>
+</head>
+<body class="text-textWhite font-sans antialiased min-h-screen pb-12" x-data="familyApp()" x-init="init()">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-40 bg-[#0C332C]/90 backdrop-blur-md border-b border-[#22D3EE]/15 px-4 py-3 shadow-sm">
+    <div class="w-full max-w-xl mx-auto flex justify-between items-center gap-2">
+      <div class="shrink">
+        <!-- Judul Utama menggunakan font-serif (Playfair Display) -->
+        <h1 class="text-[19px] sm:text-[21px] font-serif font-bold text-textWhite tracking-wide leading-tight drop-shadow-sm">
+          Silsilah Keluarga
+        </h1>
+        <p class="text-[12px] text-[#9FE0D3] font-medium mt-0.5 uppercase tracking-wider" x-text="getSubTitle()"></p>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button @click="reload()" title="Perbarui Data" class="inner-card hover:bg-[#123F37] w-9 h-9 rounded-xl shadow-sm flex items-center justify-center text-[#22D3EE] transition active:scale-95">
+          <i class="fa-solid fa-rotate" :class="isReloading ? 'fa-spin' : ''"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="w-full max-w-xl mx-auto px-4 py-4 space-y-4">
+    
+    <!-- VIEW: DASHBOARD UTAMA -->
+    <div x-show="view === 'list'" class="space-y-4">
+      <div class="glossy-card rounded-2xl p-4 shadow-xl">
+        <div class="relative">
+          <input type="text" x-model="search" placeholder="Cari nama anggota keluarga..." 
+            class="w-full bg-[#04332F]/60 border border-[#22D3EE]/30 rounded-xl pl-11 pr-4 py-3 text-[14px] text-textWhite focus:outline-none focus:border-woodGold transition placeholder-textMuted/60">
+          <i class="fa-solid fa-magnifying-glass text-woodGold absolute left-4 top-3.5 text-base"></i>
+        </div>
+      </div>
+
+      <template x-if="search.trim() !== ''">
+        <div class="space-y-3">
+          <div class="text-[13px] font-medium text-textMuted px-1 drop-shadow-sm">
+            Hasil pencarian untuk: "<span class="text-woodGold font-bold" x-text="search"></span>"
+          </div>
+          <template x-for="m in searchResults" :key="m.id">
+            <div @click="openDetail(m)" 
+              class="glossy-card rounded-2xl p-4 cursor-pointer flex items-center justify-between gap-3 transition active:scale-[0.98]">
+              <div class="flex items-center gap-3.5 min-w-0">
+                <div class="w-11 h-11 rounded-xl inner-card border border-[#22D3EE]/30 text-woodGold flex items-center justify-center font-bold text-[16px] shrink-0">
+                  <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="min-w-0">
+                  <!-- Nama Anggota menggunakan font-serif (Playfair Display) -->
+                  <h3 class="text-[16px] font-serif font-bold text-textWhite truncate drop-shadow-sm" x-text="m.nama"></h3>
+                  <p class="text-[12px] text-textMuted mt-0.5" x-text="'Lahir: ' + formatDate(m['tanggal lahir'])"></p>
+                </div>
+              </div>
+              <span class="inner-card text-woodGold border border-[#22D3EE]/30 px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0">LIHAT</span>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <template x-if="search.trim() === ''">
+        <div class="space-y-3">
+          <div class="glossy-card rounded-2xl p-4 space-y-2">
+            <label class="text-[13px] font-bold text-textWhite flex items-center gap-2 drop-shadow-sm">
+              <i class="fa-solid fa-list-ul text-woodGold"></i> Pilih Cepat Cabang Keluarga
+            </label>
+            <select @change="onSelectCabangDropdown($event)" class="w-full bg-[#04332F]/60 border border-[#22D3EE]/30 rounded-xl px-3.5 py-3 text-[14px] text-textWhite focus:outline-none focus:border-woodGold transition">
+              <option value="" style="background: #04332F; color: #F0FDFA;">-- Pilih Nama Cabang Keluarga --</option>
+              <template x-for="c in cabang" :key="c.keluarga_id">
+                <option :value="c.keluarga_id" x-text="c.nama_keluarga + ' (' + countMembersInCabang(c.keluarga_id) + ' Orang)'" style="background: #04332F; color: #F0FDFA;"></option>
+              </template>
+            </select>
+          </div>
+
+          <!-- TOMBOL MENU MENUJU LIST CABANG LENGKAP -->
+          <button @click="view = 'cabang_list'" class="w-full glossy-card hover:brightness-110 text-textWhite px-4 py-3 rounded-2xl text-[14px] font-bold transition flex items-center justify-between active:scale-[0.98]">
+            <span class="flex items-center gap-2.5">
+              <i class="fa-solid fa-sitemap text-woodGold"></i> Lihat Semua Cabang Keluarga
+            </span>
+            <span class="inner-card text-woodGold border border-[#22D3EE]/30 px-2.5 py-1 rounded-xl text-[12px]" x-text="cabang.length + ' Cabang'"></span>
+          </button>
+
+          <button @click="openTreeView()" class="w-full bg-gradient-to-r from-[#22D3EE] to-[#0E7490] hover:brightness-110 text-[#04332F] px-4 py-3.5 rounded-2xl text-[14px] font-extrabold transition flex items-center justify-between active:scale-[0.98] shadow-lg border border-[#A5F3FC]/60">
+            <span class="flex items-center gap-2.5">
+              <i class="fa-solid fa-tree"></i> VIEW POHON KELUARGA
+            </span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+
+          <div class="glossy-card rounded-2xl p-4 space-y-3">
+            <div class="flex items-center gap-2 text-woodGold font-bold text-[13px] drop-shadow-sm">
+              <i class="fa-solid fa-chart-pie"></i> Statistik Silsilah Keluarga
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div class="inner-card rounded-xl p-4 text-center flex flex-col items-center justify-center space-y-1">
+                <i class="fa-solid fa-sitemap text-woodGold text-xl"></i>
+                <span class="text-[26px] font-extrabold text-textWhite block drop-shadow-sm leading-none mt-1" x-text="cabang.length"></span>
+              </div>
+              <div class="inner-card rounded-xl p-4 text-center flex flex-col items-center justify-center space-y-1">
+                <i class="fa-solid fa-users text-woodGold text-xl"></i>
+                <span class="text-[26px] font-extrabold text-woodGold block drop-shadow-sm leading-none mt-1" x-text="members.length"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- VIEW: LIST CABANG KELUARGA -->
+    <div x-show="view === 'cabang_list'" class="space-y-4" style="display: none;">
+      <button @click="view = 'list'" class="w-full back-nav-btn px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]">
+        <i class="fa-solid fa-arrow-left"></i> Kembali ke Menu Utama
+      </button>
+
+      <div class="flex justify-between items-center px-1 drop-shadow-sm">
+        <h2 class="text-[15px] font-bold text-textWhite flex items-center gap-2">
+          <i class="fa-solid fa-sitemap text-woodGold"></i> Pilih Cabang Keluarga
+        </h2>
+        <span class="text-[11px] inner-card text-woodGold border border-[#22D3EE]/25 px-2.5 py-0.5 rounded-lg font-bold" x-text="cabang.length + ' Cabang'"></span>
+      </div>
+
+      <div class="space-y-3">
+        <template x-for="c in cabang" :key="c.keluarga_id">
+          <div @click="openCabangMembers(c)" class="glossy-card-cabang rounded-2xl p-4 space-y-3 cursor-pointer group transition active:scale-[0.98]">
+            <div class="flex items-start gap-3.5 relative z-10">
+              <template x-if="c.foto && c.foto !== '-'">
+                <img :src="c.foto" class="w-14 h-14 rounded-xl object-cover border border-[#22D3EE]/30 shrink-0">
+              </template>
+              <template x-if="!c.foto || c.foto === '-'">
+                <div class="w-14 h-14 rounded-xl inner-card border border-[#22D3EE]/30 text-woodGold flex items-center justify-center font-bold text-xl shrink-0">
+                  <i class="fa-solid fa-house-chimney-user"></i>
+                </div>
+              </template>
+              <div class="min-w-0 flex-1">
+                <span class="text-[10px] font-bold text-woodGold uppercase tracking-wider block drop-shadow-sm">ID: <span x-text="c.keluarga_id"></span></span>
+                <!-- Nama Keluarga menggunakan font-serif (Playfair Display) -->
+                <h3 class="text-[17px] font-serif font-bold text-textWhite group-hover:text-woodGold transition truncate mt-0.5 drop-shadow-sm" x-text="c.nama_keluarga"></h3>
+              </div>
+            </div>
+            <div class="space-y-1.5 text-[12px] inner-card rounded-xl p-3 relative z-10">
+              <div class="flex items-start gap-2">
+                <i class="fa-solid fa-location-dot text-woodGold mt-0.5 shrink-0"></i>
+                <span class="text-textMuted" x-text="'Alamat: ' + (c.alamat || '-')"></span>
+              </div>
+              
+              <!-- KODE TOMBOL MAP (DAFTAR CABANG) -->
+              <template x-if="c.map && c.map !== '-' && c.map !== '' && c.map !== null && c.map !== undefined">
+                <a :href="c.map" target="_blank" @click.stop
+                   class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#04332F] bg-[#22D3EE] hover:bg-[#A5F3FC] px-3 py-1.5 rounded-lg transition mt-2 w-fit shadow-sm">
+                  <i class="fa-solid fa-map-locat
